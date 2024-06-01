@@ -15,9 +15,9 @@ public class Assignment1 {
         // Setting up scanner
         Scanner input = new Scanner(System.in);
         // Making constant for gravity
-        double GRAVITY = 9.81;
+        double GRAVITY = -9.81;
         // Intialzing variable
-        double angle, velocity, seconds;
+        double angle, velocity, seconds, horizontalDistance, verticalDistance;
 
         // Asking user for the initial angle
         do {
@@ -45,5 +45,14 @@ public class Assignment1 {
                 System.out.println("Please enter a positive value for the time.");
             }
         } while (seconds <= 0);
+
+        // Calculating horizontal distance
+        horizontalDistance = (velocity * Math.cos(Math.toRadians(angle))) * seconds;
+        // Calculating vertical distance
+        verticalDistance = (velocity * Math.sin(Math.toRadians(angle))) * seconds + 0.5 * GRAVITY * Math.pow(seconds, 2);
+
+        // Print results
+        System.out.println("---Horizontal Distance--- \n" + horizontalDistance);
+        System.out.println("---Vertical Distance--- \n" + verticalDistance);
     }
 }
