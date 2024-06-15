@@ -16,5 +16,18 @@ public class Assignment2 {
         // initializing upper bound
         int upperBound = 0;
 
+        System.out.print("Enter an upper bound (2-1000): ");
+
+        if (input.hasNext()){
+            upperBound = input.nextInt();
+
+            if (upperBound >=2 && upperBound <= 1000) {
+                
+            } else {
+                System.out.println("Error! Number must be 2-1000!");
+            }
+        } else {
+            System.out.println("Error! Must be integer!");
+        }
     }
 }
