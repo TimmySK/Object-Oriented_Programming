@@ -1,163 +1,214 @@
-/*
-Title: Scoring for Bowling
-Name: Karanvir Kooner
-Date: 2024-08-14
-Purpose: To create a scoring program
-for bowling
-*/
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-// importing scanner library
-import java.util.Scanner;
+public class FinalProject extends JFrame {
+    // Text fields for player names
+    private JTextField player1Field, player2Field;
+    // 2D array of text fields for entering scores
+    private JTextField[][] scoreFields;
+    // Label to display the result
+    private JLabel resultLabel;
+    // Instance of the BowlingGame class to manage game logic
+    private BowlingGame game;
 
-public class FinalProject {
-    public static void main(String[] args) {
-        // Setting up Scanner
-        Scanner input = new Scanner(System.in);
-        // Asking user for playerName
-        System.out.print("Enter player 1s name: ");
-        // Collect player1Name
-        String player1Name = input.nextLine();
-        // Asking user for playerName
-        System.out.print("Enter player 2s name: ");
-        // Collect player2Name
-        String player2Name = input.nextLine();
-        // Calculates scores for Player 1
-        int[] player1Scores = getGameScores(player1Name);
-        // Calculates scores for Player 2
-        int[] player2Scores = getGameScores(player2Name);
-        // Making the table
-        System.out.println("\nResults:");
-        System.out.print("Frame: ");
-        // For loop prints 1-10
-        for (int frame = 1; frame <=10; frame++) {
-            System.out.print(frame + " ");
-        }
-        // For loop prints the players scores each frame
-        System.out.print("\n" + player1Name + ": ");
-        for (int score : player1Scores) {
-            System.out.print(score + " ");
-        }
-        // For loop prints the player scores each frame
-        System.out.print("\n" + player2Name + ": ");
-        for (int score : player2Scores) {
-            System.out.print(score + " ");
-        }
-        // Initializes player1TotalScore to 0
-        int player1TotalScore = 0;
-        // Initializes player2TotalScore to 0
-        int player2TotalScore = 0;
-        // For loop gets the total score
-        for (int score : player1Scores) {
-            player1TotalScore += score;
-        }
-        // For loop gets the total score
-        for (int score : player2Scores) {
-            player2TotalScore += score;
-        }
-        // Displays total scores
-        System.out.println("\n\nTotal Scores:");
-        System.out.println(player1Name + ": " + player1TotalScore);
-        System.out.println(player2Name + ": " + player2TotalScore);
-        // Winner/tie displays
-        if (player1TotalScore > player2TotalScore) {
-            System.out.println("\nWinner: " + player1Name);
-        } else if (player2TotalScore > player1TotalScore) {
-            System.out.println("\nWinner: " + player2Name);
-        } else {
-            System.out.println("\nTie!");
-        }
-    } // end
+    public FinalProject() {
+        // Set up the main frame
+        setTitle("Bowling Score Calculator");
+        setSize(800, 400); // Size of the window
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
-    public static int getRoll(String playerName, int frame, int roll) {
-        // Setting up Scanner
-        Scanner input = new Scanner(System.in);
-        // Setting boolean validInput to false
-        boolean validInput = false;
-        // Initializing score as 0
-        int score = 0;
+        // Panel for entering player names
+        JPanel playerPanel = new JPanel(new GridLayout(2, 2));
+        playerPanel.add(new JLabel("Player 1:"));
+        player1Field = new JTextField(); // Text field for Player 1 name
+        playerPanel.add(player1Field);
 
-        // While loop for validation
-        while (!validInput) {
-            // Asks user for players score
-            System.out.print("Roll " + roll + ": ");
-            // If statement for validating a integer input
-            if (input.hasNextInt()) {
-                // Stores the players score in the variable if check passed
-                score = input.nextInt();
-                // If statement to make sure users input is within range
-                if (score >=0 && score <= 10) {
-                    // Breaks while loop if valid
-                    validInput = true;
-                } else { // error message for not being in range
-                    System.out.println("Invalid input! Must be 0-10.");
-                }
-            } else { // error message for not being integer
-                System.out.println("Invalid input! Please try again.");
-                // Clears the valid input
-                input.next();
+        playerPanel.add(new JLabel("Player 2:"));
+        player2Field = new JTextField(); // Text field for Player 2 name
+        playerPanel.add(player2Field);
+        add(playerPanel, BorderLayout.NORTH); // Add playerPanel to the top of the frame
+
+        // Panel for entering scores
+        JPanel scorePanel = new JPanel(new GridLayout(2, 11)); // 2 rows (one for each player) and 11 columns (10 frames + extra)
+        scoreFields = new JTextField[2][21]; // 2 players, 21 fields (including extra rolls)
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 21; j++) {
+                scoreFields[i][j] = new JTextField(); // Create a text field for each score entry
+                scorePanel.add(scoreFields[i][j]); // Add text field to scorePanel
             }
         }
-        // Returns score
+        add(scorePanel, BorderLayout.CENTER); // Add scorePanel to the center of the frame
+
+        // Panel for buttons and result display
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+
+        // Calculate Scores button
+        JButton calculateButton = new JButton("Calculate Scores");
+        buttonPanel.add(calculateButton, BorderLayout.NORTH); // Add button to the top of buttonPanel
+
+        // Result label to display the game outcome
+        resultLabel = new JLabel("Result: ");
+        resultLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center-align the text
+        buttonPanel.add(resultLabel, BorderLayout.SOUTH); // Add result label to the bottom of buttonPanel
+
+        add(buttonPanel, BorderLayout.SOUTH); // Add buttonPanel to the bottom of the frame
+
+        // Action listener for the Calculate Scores button
+        calculateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Get player names from text fields
+                String player1Name = player1Field.getText();
+                String player2Name = player2Field.getText();
+                game = new BowlingGame(player1Name, player2Name); // Initialize the game with player names
+
+                // Loop through frames to get scores for each frame
+                for (int frame = 0; frame < 10; frame++) {
+                    int roll1 = parseInput(scoreFields[0][frame].getText()); // Get roll 1 for Player 1
+                    int roll2 = frame < 9 ? parseInput(scoreFields[0][frame + 10].getText()) : 0; // Get roll 2 for Player 1
+                    game.addRoll(0, frame, roll1, roll2); // Add rolls to the game for Player 1
+
+                    roll1 = parseInput(scoreFields[1][frame].getText()); // Get roll 1 for Player 2
+                    roll2 = frame < 9 ? parseInput(scoreFields[1][frame + 10].getText()) : 0; // Get roll 2 for Player 2
+                    game.addRoll(1, frame, roll1, roll2); // Add rolls to the game for Player 2
+                }
+
+                // Handle extra rolls in the 10th frame
+                if (game.isExtraRollAllowed(0, 9)) {
+                    int roll1 = parseInput(scoreFields[0][20].getText()); // Get extra roll for Player 1
+                    game.addExtraRoll(0, roll1); // Add extra roll to the game for Player 1
+                }
+
+                if (game.isExtraRollAllowed(1, 9)) {
+                    int roll1 = parseInput(scoreFields[1][20].getText()); // Get extra roll for Player 2
+                    game.addExtraRoll(1, roll1); // Add extra roll to the game for Player 2
+                }
+
+                game.calculateFinalScores(); // Calculate final scores for both players
+                resultLabel.setText(game.getWinner()); // Display the winner
+            }
+        });
+
+        setVisible(true); // Make the frame visible
+    }
+
+    // Helper method to parse input from text fields
+    private int parseInput(String input) {
+        try {
+            return Integer.parseInt(input); // Convert input to integer
+        } catch (NumberFormatException e) {
+            return 0; // Default to 0 if input is invalid
+        }
+    }
+
+    public static void main(String[] args) {
+        new FinalProject(); // Create and display the GUI
+    }
+}
+
+// Class representing a player in the game
+class Player {
+    private String name;
+    private int[] rolls = new int[21]; // Array to store rolls (10 frames + extra rolls)
+    private int currentRoll = 0; // Index for the next roll
+
+    public Player(String name) {
+        this.name = name;
+    }
+
+    // Add a roll to the player's score
+    public void addRoll(int pins) {
+        rolls[currentRoll++] = pins;
+    }
+
+    // Calculate the player's total score
+    public int getScore() {
+        int score = 0;
+        int rollIndex = 0;
+        for (int frame = 0; frame < 10; frame++) {
+            if (isStrike(rollIndex)) { // Strike
+                score += 10 + rolls[rollIndex + 1] + rolls[rollIndex + 2];
+                rollIndex++;
+            } else if (isSpare(rollIndex)) { // Spare
+                score += 10 + rolls[rollIndex + 2];
+                rollIndex += 2;
+            } else { // Open frame
+                score += rolls[rollIndex] + rolls[rollIndex + 1];
+                rollIndex += 2;
+            }
+        }
         return score;
     }
 
-    public static int getTurnScores(String playerName, int frame) {
-        // initializing totalScore as 0
-        int totalScore = 0;
-        // Display header for the frames
-        System.out.println("---" + playerName + " Frame " + frame + "---");
-        // score1 stores valid score from getRoll function
-        int score1 = getRoll(playerName, frame, 1);
-        // score1 is added to totalScore
-        totalScore += score1;
-        // If statement in case of a strike
-        if (score1 == 10) {
-            // Displays strike message
-            System.out.println("Strike🎳");
-            // score2 stores valid score from getRoll function
-            int score2 = getRoll(playerName, frame, 2);
-            // score2 is added to totalScore
-            totalScore += score2;
-            // If statement in case of double strike
-            if (score2 == 10) {
-                // Displays strike message
-                System.out.println("🎳Double Strike🎳");
-                // score3 stores a valid score from getRoll function
-                int score3 = getRoll(playerName, frame, 3);
-                // score3 is added to totalScore
-                totalScore += score3;
-                // If statement in case of three strikes resulting in turkey
-                if (score3 == 10) {
-                    // Displays turkey message
-                    System.out.println("Turkey🦃");
-                }
-            }
-        } else { // Else statement to continue on if no strike
-            // score2 store valid score from getRoll function
-            int score2 = getRoll(playerName, frame, 2);
-            // score2 is added to totalScore
-            totalScore += score2;
-            // If statement in case of a spare
-            if (score1 + score2 == 10) {
-                // Displays spare message
-                System.out.println("Spare!");
-                // third roll gets added to totalScore
-                totalScore += getRoll(playerName, frame, 3);
-            }
-        }
-        // Returns totalScore
-        return totalScore;
+    private boolean isStrike(int rollIndex) {
+        return rolls[rollIndex] == 10; // Check if the roll is a strike
     }
 
-    public static int[] getGameScores(String playerName) {
-        // Makes an array called frameScores with a range of 10
-        int [] frameScores = new int[10];
-        // For loops to iterate through the array
-        for (int frame = 1; frame <=10; frame++) {
-            // Stores total score of the frame in the array
-            frameScores[frame - 1] = getTurnScores(playerName, frame);
-        }
-        // Return frameScores
-        return frameScores;
+    private boolean isSpare(int rollIndex) {
+        return rolls[rollIndex] + rolls[rollIndex + 1] == 10; // Check if the roll is a spare
     }
-} // end
+
+    public String getName() {
+        return name;
+    }
+
+    public int getCurrentRoll() {
+        return currentRoll;
+    }
+
+    public int getRoll(int rollIndex) {
+        return rolls[rollIndex];
+    }
+}
+
+// Class to manage the bowling game
+class BowlingGame {
+    private Player[] players = new Player[2]; // Two players in the game
+
+    public BowlingGame(String player1Name, String player2Name) {
+        players[0] = new Player(player1Name);
+        players[1] = new Player(player2Name);
+    }
+
+    // Add rolls for a given player and frame
+    public void addRoll(int playerIndex, int frame, int roll1, int roll2) {
+        players[playerIndex].addRoll(roll1);
+        if (roll1 != 10 || frame == 9) { // No second roll if it's a strike (except in the 10th frame)
+            players[playerIndex].addRoll(roll2);
+        }
+    }
+
+    // Add an extra roll for a player if needed
+    public void addExtraRoll(int playerIndex, int roll) {
+        players[playerIndex].addRoll(roll);
+    }
+
+    // Check if an extra roll is allowed in the 10th frame
+    public boolean isExtraRollAllowed(int playerIndex, int frame) {
+        if (frame < 9) return false;
+        Player player = players[playerIndex];
+        return player.getCurrentRoll() == 18 && (player.getRoll(18) == 10 || player.getRoll(18) + player.getRoll(19) == 10);
+    }
+
+    // Calculate final scores for the game
+    public void calculateFinalScores() {
+        // Calculation done within Player class
+    }
+
+    // Determine the winner of the game
+    public String getWinner() {
+        int p1Total = players[0].getScore();
+        int p2Total = players[1].getScore();
+
+        if (p1Total > p2Total) {
+            return players[0].getName() + " wins with " + p1Total + " points!";
+        } else if (p2Total > p1Total) {
+            return players[1].getName() + " wins with " + p2Total + " points!";
+        } else {
+            return "It's a tie!";
+        }
+    }
+}
